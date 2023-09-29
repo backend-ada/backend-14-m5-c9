@@ -10,7 +10,7 @@ Primero que nada, forkeen este repo y clonenlo.
 
 Una vez entendido cómo es que funciona este sistema de Login, les propongo trabajar en grupo, analizar este proyecto, y trabajar sobre lo siguiente:
 
-- El sistema de autenticación está hecho de tal forma que **SIEMPRE** pide estar autenticado, para efectuar cualquier acción, incluso para loguearse... ¿No tiene mucho sentido no? ¿Cómo hago si me quiero loguear por primera vez? Este primer desafío consiste en resolver este problema. Piensen en grupos qué es lo que debería de pasar, qué es lo que generalmente sucede en los sistemas de logueo de cualquier componente de software. En base a este análisis, desarrollen la solución.
+- El sistema de autenticación de este proyecto está hecho de tal forma que **SIEMPRE** pide estar autenticado, para efectuar cualquier acción, incluso para loguearse... ¿No tiene mucho sentido no? ¿Cómo hago si me quiero loguear por primera vez? Este primer desafío consiste en resolver este problema. Piensen en grupos qué es lo que debería de pasar, qué es lo que generalmente sucede en los sistemas de logueo de cualquier componente de software. En base a este análisis, desarrollen la solución.
 
 - El segundo desafío consiste en agregar a este proyecto la posibilidad de hacer un Logout. Piensen en grupo en qué consiste el hacer un Logout, cómo llevarlo a cabo, y hagan el desarrollo.
 
