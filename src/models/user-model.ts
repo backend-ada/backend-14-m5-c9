@@ -1,104 +1,116 @@
-import users from '../database/users.json';
-import { writeFile } from 'jsonfile';
-import { randomUUID } from 'node:crypto';
+import users from "../database/users.json";
+import { writeFile } from "jsonfile";
+import { randomUUID } from "node:crypto";
 
 abstract class UserModel {
-	// Como realizamos las tareas de buscar un usuario y de guardar en la base de datos varias veces, separamos la lógica en métodos privados aparte. Privados para que sólo sean accesibles dentro del contexto de esta clase UserModel y no desde el exterior, ya que no es necesario.
+  // Como realizamos las tareas de buscar un usuario y de guardar en la base de datos varias veces, separamos la lógica en métodos privados aparte. Privados para que sólo sean accesibles dentro del contexto de esta clase UserModel y no desde el exterior, ya que no es necesario.
 
-	private static findUser(username: string) {
-		return users.find((user) => user.username === username);
-	}
+  private static findUser(username: string) {
+    return users.find((user) => user.username === username);
+  }
 
-	private static async writeDB() {
-		return writeFile('./src/database/users.json', users);
-	}
+  private static async writeDB() {
+    return writeFile("./src/database/users.json", users);
+  }
 
-	static async checkToken(token: string) {
-		return users.find((user) => user.token === token);
-	}
+  static async checkToken(token: string) {
+    return users.find((user) => user.token === token);
+  }
 
-	static async login(userData: any) {
-		const { username, password } = userData;
+  static async login(userData: any) {
+    const { username, password } = userData;
 
-		const userFound = this.findUser(username);
+    const userFound = this.findUser(username);
 
-		// Si no encuentra un user, devolvemos un 404 (recurso no encontrado)
-		if (!userFound) return 404;
+    // Si no encuentra un user, devolvemos un 404 (recurso no encontrado)
+    if (!userFound) return 404;
 
-		// Si el password no coincide con la almacenada en la BBDD, devolvemos un 400 (solicitud mal)
-		if (userFound.password !== password) return 400;
+    // Si el password no coincide con la almacenada en la BBDD, devolvemos un 400 (solicitud mal)
+    if (userFound.password !== password) return 400;
 
-		// Si encontró al usuario y los datos coinciden, entonces el logueo fue exitoso.
-		// Para poder mejorar nuestro sistema de logueo, al loguearnos vamos a generar un token.
-		// Así, vamos a solicitar ese token cada vez que se soliciten datos a los endpoints.
-		const token = randomUUID();
+    // Si encontró al usuario y los datos coinciden, entonces el logueo fue exitoso.
+    // Para poder mejorar nuestro sistema de logueo, al loguearnos vamos a generar un token.
+    // Así, vamos a solicitar ese token cada vez que se soliciten datos a los endpoints.
+    const token = randomUUID();
 
-		// Una vez generado el token, lo asociamos con el usuario y guardamos la base de datos.
-		userFound.token = token;
-		this.writeDB();
+    // Una vez generado el token, lo asociamos con el usuario y guardamos la base de datos.
+    userFound.token = token;
+    this.writeDB();
 
-		return token;
-	}
+    return token;
+  }
 
-	static async createUser(data: any) {
-		const { username, email, password } = data;
+  static async logout(userData: any) {
+    const user = this.findUser(userData.username);
 
-		const userExists = this.findUser(username);
-		if (userExists) return 400;
+    if (!user) return 400;
+    user.token = "";
 
-		const newUser = { username, email, password, token: '' };
-		users.push(newUser);
+    // Llama al método writeDB para guardar los cambios en la base de datos
+    await this.writeDB();
 
-		await this.writeDB();
+    return 200;
+  }
 
-		// En el caso de operación exitosa, sólo quiero devolver estos datos
-		return { username, email };
-	}
+  static async createUser(data: any) {
+    const { username, email, password } = data;
 
-	static async getAll() {
-		return users;
-	}
+    const userExists = this.findUser(username);
+    if (userExists) return 400;
 
-	static async update(data: any) {
-		// Este endpoint es para actualizar los datos de usuarios.
-		// AL usuario lo buscamos según su username, que es su ID único.
+    const newUser = { username, email, password, token: "" };
+    users.push(newUser);
 
-		const { username, email, password } = data;
+    await this.writeDB();
 
-		const userFound = this.findUser(username);
+    // En el caso de operación exitosa, sólo quiero devolver estos datos
+    return { username, email };
+  }
 
-		console.log(username);
-		console.log(userFound);
+  static async getAll() {
+    return users;
+  }
 
-		if (!userFound) return 404;
+  static async update(data: any) {
+    // Este endpoint es para actualizar los datos de usuarios.
+    // AL usuario lo buscamos según su username, que es su ID único.
 
-		// Según la data que hayan enviado a la request, modificamos lo correspondiente.
-		if (username) userFound.username = username;
-		if (email) userFound.email = email;
-		if (password) userFound.password = password;
+    const { username, email, password } = data;
 
-		await this.writeDB();
+    const userFound = this.findUser(username);
 
-		return userFound;
-	}
+    console.log(username);
+    console.log(userFound);
 
-	static async delete(username: string) {
-		// Usamos el método de Array findIndex para encontrar el índice del elemento usuario.
-		// Si existe, lo eliminamos...
+    if (!userFound) return 404;
 
-		const userFoundIndex = users.findIndex(
-			(user) => user.username === username
-		);
+    // Según la data que hayan enviado a la request, modificamos lo correspondiente.
+    if (username) userFound.username = username;
+    if (email) userFound.email = email;
+    if (password) userFound.password = password;
 
-		if (userFoundIndex === -1) return 404;
+    await this.writeDB();
 
-		const userDeleted = users[userFoundIndex];
-		users.splice(userFoundIndex, 1);
+    return userFound;
+  }
 
-		await this.writeDB();
+  static async delete(username: string) {
+    // Usamos el método de Array findIndex para encontrar el índice del elemento usuario.
+    // Si existe, lo eliminamos...
 
-		return userDeleted;
-	}
+    const userFoundIndex = users.findIndex(
+      (user) => user.username === username
+    );
+
+    if (userFoundIndex === -1) return 404;
+
+    const userDeleted = users[userFoundIndex];
+    users.splice(userFoundIndex, 1);
+
+    await this.writeDB();
+
+    return userDeleted;
+  }
 }
 
 export default UserModel;
